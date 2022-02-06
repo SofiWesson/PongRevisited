@@ -31,7 +31,7 @@ namespace Pong
     {
         Vector2 m_position;
         Vector2 m_size;
-        Vector2 m_center;
+        Vector2 m_corner;
         Color m_color;
         KeyboardKey m_upKey;
         KeyboardKey m_downKey;
@@ -46,7 +46,7 @@ namespace Pong
         public void SetDownKey(KeyboardKey a_downKey) { m_downKey = a_downKey; }
         public void SetSpeed(float a_speed) { m_speed = a_speed; }
         public void SetScore(int a_score) { m_score = a_score;}
-        public void SetCorner(Vector2 a_center) { m_center = a_center; }
+        public void SetCorner(Vector2 a_center) { m_corner = a_center; }
 
         // Getters
         public Vector2 GetPosition() { return m_position; }
@@ -56,13 +56,14 @@ namespace Pong
         public KeyboardKey GetDownKey() { return m_downKey; }
         public float GetSpeed() { return m_speed; }
         public int GetScore() { return m_score;}
-        public Vector2 GetCorner() { return m_center; }
+        public Vector2 GetCorner() { return m_corner; }
     }
 
     class Program
     {
         Vector2 m_aspectRatio = new Vector2(16, 9);
         
+        // 720p is 45
         // 1080p is 120
         // 4k is 240
         static int m_windowSize = 120;
@@ -241,11 +242,11 @@ namespace Pong
             Raylib.DrawCircleV(m_ball.GetPosition(), m_ball.GetRadius(), m_ball.GetColor());
 
             // Debug
-            // Raylib.DrawCircleV(m_rightPaddle.GetCorner(), 5f, Color.YELLOW);
-            // Raylib.DrawCircleV(m_rightPaddle.GetPosition(), 5f, Color.YELLOW);
-            // Raylib.DrawCircleV(m_leftPaddle.GetCorner(), 5f, Color.YELLOW);
-            // Raylib.DrawCircleV(m_leftPaddle.GetPosition(), 5f, Color.YELLOW);
-            // Raylib.DrawCircleV(m_ball.GetPosition(), 5f, Color.YELLOW);
+            // Raylib.DrawCircleV(m_rightPaddle.GetCorner(), 0.1f * m_windowSize, Color.YELLOW);
+            // Raylib.DrawCircleV(m_rightPaddle.GetPosition(), 0.1f * m_windowSize, Color.YELLOW);
+            // Raylib.DrawCircleV(m_leftPaddle.GetCorner(), 0.1f * m_windowSize, Color.YELLOW);
+            // Raylib.DrawCircleV(m_leftPaddle.GetPosition(), 0.1f * m_windowSize, Color.YELLOW);
+            // Raylib.DrawCircleV(m_ball.GetPosition(), 0.1f * m_windowSize, Color.YELLOW);
 
             Raylib.EndDrawing();
         }
