@@ -64,7 +64,7 @@ namespace Pong
         Vector2 m_aspectRatio = new Vector2(16, 9);
         
         // 1080p is 120
-        // 4k is 256
+        // 4k is 240
         static int m_windowSize = 120;
         static string m_windowName = "Pong";
 
@@ -105,24 +105,24 @@ namespace Pong
         {
             // Set ball values
             m_ball.SetDirection(new Vector2(0.707f, 0.707f));
-            m_ball.SetRadius(35f);
-            m_ball.SetSpeed(7f);
+            m_ball.SetRadius(0.29f * m_windowSize);
+            m_ball.SetSpeed(0.07f * m_windowSize);
             m_ball.SetColor(Color.WHITE);
 
             // Set left paddle values
-            m_leftPaddle.SetSize(new Vector2(30, 300));
+            m_leftPaddle.SetSize(new Vector2(.23f * m_windowSize, 2.5f * m_windowSize));
             m_leftPaddle.SetColor(Color.BLUE);
             m_leftPaddle.SetUpKey(KeyboardKey.KEY_W);
             m_leftPaddle.SetDownKey(KeyboardKey.KEY_S);
-            m_leftPaddle.SetSpeed(10f);
+            m_leftPaddle.SetSpeed(.07f * m_windowSize);
             m_leftPaddle.SetScore(0);
 
             // Set right paddle values
-            m_rightPaddle.SetSize(new Vector2(30, 300));
+            m_rightPaddle.SetSize(new Vector2(.23f * m_windowSize, 2.5f * m_windowSize));
             m_rightPaddle.SetColor(Color.RED);
             m_rightPaddle.SetUpKey(KeyboardKey.KEY_UP);
             m_rightPaddle.SetDownKey(KeyboardKey.KEY_DOWN);
-            m_rightPaddle.SetSpeed(10f);
+            m_rightPaddle.SetSpeed(.07f * m_windowSize);
             m_rightPaddle.SetScore(0);
 
             // set initial position
@@ -131,6 +131,14 @@ namespace Pong
         
         void Update()
         {
+            if (Raylib.IsKeyPressed(KeyboardKey.KEY_F11))
+            {
+                if (Raylib.IsWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE))
+                    Raylib.ClearWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+                else
+                    Raylib.SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+            }
+
             MovePaddles();
             MoveBall();
             // Updates corner positions for both paddles
@@ -215,8 +223,8 @@ namespace Pong
         void ResetPos()
         {
             m_ball.SetPosition(new Vector2(m_windowWidth / 2, m_windowHeight / 2));
-            m_leftPaddle.SetPosition(new Vector2(30, m_windowHeight / 2));
-            m_rightPaddle.SetPosition(new Vector2(m_windowWidth - 30, m_windowHeight / 2));
+            m_leftPaddle.SetPosition(new Vector2(.23f * m_windowSize, m_windowHeight / 2));
+            m_rightPaddle.SetPosition(new Vector2(m_windowWidth - (.23f * m_windowSize), m_windowHeight / 2));
         }
 
         void Draw()
@@ -224,8 +232,8 @@ namespace Pong
             Raylib.BeginDrawing();
             Raylib.ClearBackground(Color.BLACK);
 
-            Raylib.DrawText(m_leftPaddle.GetScore().ToString(), 30, 30, 40, Color.LIGHTGRAY);
-            Raylib.DrawText(m_rightPaddle.GetScore().ToString(), m_windowWidth - 50, 30, 40, Color.LIGHTGRAY);
+            Raylib.DrawText(m_leftPaddle.GetScore().ToString(), (int)(.25f * m_windowSize), (int)(.25f * m_windowSize), (int)(0.5 * m_windowSize), Color.LIGHTGRAY);
+            Raylib.DrawText(m_rightPaddle.GetScore().ToString(), m_windowWidth - (int)(.58f * m_windowSize), (int)(.25f * m_windowSize), (int)(0.5 * m_windowSize), Color.LIGHTGRAY);
 
             Raylib.DrawRectangleV(m_leftPaddle.GetCorner(), m_leftPaddle.GetSize(), m_leftPaddle.GetColor());
             Raylib.DrawRectangleV(m_rightPaddle.GetCorner(), m_rightPaddle.GetSize(), m_rightPaddle.GetColor());
