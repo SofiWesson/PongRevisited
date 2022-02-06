@@ -8,7 +8,6 @@ namespace Pong
     {
         Vector2 m_position;
         Vector2 m_direction;
-        Vector2 m_center;
         float m_radius;
         float m_speed;
         Color m_color;
@@ -16,7 +15,6 @@ namespace Pong
         // Setters
         public void SetPosition(Vector2 a_position) { m_position = a_position; }
         public void SetDirection(Vector2 a_direction) { m_direction = a_direction; }
-        public void SetCenter(Vector2 a_center) { m_center = a_center; }
         public void SetRadius(float a_radius) { m_radius = a_radius; }
         public void SetSpeed(float a_speed) { m_speed = a_speed; }
         public void SetColor(Color a_color) { m_color = a_color; }
@@ -24,7 +22,6 @@ namespace Pong
         // Getters
         public Vector2 GetPosition() { return m_position; }
         public Vector2 GetDirection() { return m_direction; }
-        public Vector2 GetCenter() { return m_center; }
         public float GetRadius() { return m_radius; }
         public float GetSpeed() { return m_speed; }
         public Color GetColor() { return m_color;}
@@ -49,7 +46,7 @@ namespace Pong
         public void SetDownKey(KeyboardKey a_downKey) { m_downKey = a_downKey; }
         public void SetSpeed(float a_speed) { m_speed = a_speed; }
         public void SetScore(int a_score) { m_score = a_score;}
-        public void SetCenter(Vector2 a_center) { m_center = a_center; }
+        public void SetCorner(Vector2 a_center) { m_center = a_center; }
 
         // Getters
         public Vector2 GetPosition() { return m_position; }
@@ -59,7 +56,7 @@ namespace Pong
         public KeyboardKey GetDownKey() { return m_downKey; }
         public float GetSpeed() { return m_speed; }
         public int GetScore() { return m_score;}
-        public Vector2 GetCenter() { return m_center; }
+        public Vector2 GetCorner() { return m_center; }
     }
 
     class Program
@@ -71,9 +68,12 @@ namespace Pong
         static int m_windowSize = 120;
         static string m_windowName = "Pong";
 
-        Ball ball = new Ball();
-        Paddle leftPaddle = new Paddle();
-        Paddle rightPaddle = new Paddle();
+        int m_windowWidth;
+        int m_windowHeight;
+
+        Ball m_ball = new Ball();
+        Paddle m_leftPaddle = new Paddle();
+        Paddle m_rightPaddle = new Paddle();
 
         static void Main(string[] args)
         {
@@ -84,10 +84,10 @@ namespace Pong
 
         void RunProgram()
         {
-            int windowWidth = m_windowSize * (int)m_aspectRatio.X;
-            int windowHeight = m_windowSize * (int)(m_aspectRatio.Y);
+            m_windowWidth = m_windowSize * (int)m_aspectRatio.X;
+            m_windowHeight = m_windowSize * (int)(m_aspectRatio.Y);
 
-            Raylib.InitWindow(windowWidth, windowHeight, m_windowName);
+            Raylib.InitWindow(m_windowWidth, m_windowHeight, m_windowName);
             Raylib.SetTargetFPS(60);
 
             LoadGame();
@@ -103,82 +103,120 @@ namespace Pong
 
         void LoadGame()
         {
-            int windowWidth = m_windowSize * (int)m_aspectRatio.X;
-            int windowHeight = m_windowSize * (int)(m_aspectRatio.Y);
-
             // Set ball values
-            ball.SetPosition(new Vector2(windowWidth / 2, windowHeight / 2));
-            ball.SetDirection(new Vector2(0.707f, 0.707f));
-            ball.SetRadius(35f);
-            ball.SetSpeed(5f);
-            ball.SetColor(Color.WHITE);
+            m_ball.SetDirection(new Vector2(0.707f, 0.707f));
+            m_ball.SetRadius(35f);
+            m_ball.SetSpeed(7f);
+            m_ball.SetColor(Color.WHITE);
 
             // Set left paddle values
-            leftPaddle.SetPosition(new Vector2(30, windowHeight / 2));
-            leftPaddle.SetSize(new Vector2(30, 300));
-            leftPaddle.SetColor(Color.BLUE);
-            leftPaddle.SetUpKey(KeyboardKey.KEY_W);
-            leftPaddle.SetDownKey(KeyboardKey.KEY_S);
-            leftPaddle.SetSpeed(10f);
-            leftPaddle.SetScore(0);
+            m_leftPaddle.SetSize(new Vector2(30, 300));
+            m_leftPaddle.SetColor(Color.BLUE);
+            m_leftPaddle.SetUpKey(KeyboardKey.KEY_W);
+            m_leftPaddle.SetDownKey(KeyboardKey.KEY_S);
+            m_leftPaddle.SetSpeed(10f);
+            m_leftPaddle.SetScore(0);
 
             // Set right paddle values
-            rightPaddle.SetPosition(new Vector2(windowWidth - 30, windowHeight / 2));
-            rightPaddle.SetSize(new Vector2(30, 300));
-            rightPaddle.SetColor(Color.RED);
-            rightPaddle.SetUpKey(KeyboardKey.KEY_UP);
-            rightPaddle.SetDownKey(KeyboardKey.KEY_DOWN);
-            rightPaddle.SetSpeed(10f);
-            rightPaddle.SetScore(0);
+            m_rightPaddle.SetSize(new Vector2(30, 300));
+            m_rightPaddle.SetColor(Color.RED);
+            m_rightPaddle.SetUpKey(KeyboardKey.KEY_UP);
+            m_rightPaddle.SetDownKey(KeyboardKey.KEY_DOWN);
+            m_rightPaddle.SetSpeed(10f);
+            m_rightPaddle.SetScore(0);
+
+            // set initial position
+            ResetPos();
         }
         
         void Update()
         {
-            // Updates centers of both paddles and ball
-            UpdateCenters();
             MovePaddles();
             MoveBall();
+            // Updates corner positions for both paddles
+            UpdateCorners();
+
+            BallPaddleCollision(m_leftPaddle);
+            BallPaddleCollision(m_rightPaddle);
         }
 
-        void UpdateCenters()
+        void UpdateCorners()
         {
-            leftPaddle.SetCenter(
+            m_leftPaddle.SetCorner(
                 new Vector2(
-                    leftPaddle.GetPosition().X - (leftPaddle.GetSize().X / 2),
-                    leftPaddle.GetPosition().Y - (leftPaddle.GetSize().Y / 2)
+                    m_leftPaddle.GetPosition().X - (m_leftPaddle.GetSize().X / 2),
+                    m_leftPaddle.GetPosition().Y - (m_leftPaddle.GetSize().Y / 2)
                 ));
 
-            rightPaddle.SetCenter(
+            m_rightPaddle.SetCorner(
                 new Vector2(
-                    rightPaddle.GetPosition().X - (rightPaddle.GetSize().X / 2),
-                    rightPaddle.GetPosition().Y - (rightPaddle.GetSize().Y / 2)
-                ));
-
-            ball.SetCenter(
-                new Vector2(
-                    ball.GetPosition().X - (ball.GetRadius() / 2),
-                    ball.GetPosition().Y - (ball.GetRadius() / 2)
+                    m_rightPaddle.GetPosition().X - (m_rightPaddle.GetSize().X / 2),
+                    m_rightPaddle.GetPosition().Y - (m_rightPaddle.GetSize().Y / 2)
                 ));
         }
 
         void MovePaddles()
         {
             // Move left paddle up and down
-            if (Raylib.IsKeyDown(leftPaddle.GetUpKey()))
-                leftPaddle.SetPosition(new Vector2(leftPaddle.GetPosition().X, leftPaddle.GetPosition().Y - leftPaddle.GetSpeed()));
-            if (Raylib.IsKeyDown(leftPaddle.GetDownKey()))
-                leftPaddle.SetPosition(new Vector2(leftPaddle.GetPosition().X, leftPaddle.GetPosition().Y + leftPaddle.GetSpeed()));
+            if (Raylib.IsKeyDown(m_leftPaddle.GetUpKey()))
+                m_leftPaddle.SetPosition(new Vector2(m_leftPaddle.GetPosition().X, m_leftPaddle.GetPosition().Y - m_leftPaddle.GetSpeed()));
+            if (Raylib.IsKeyDown(m_leftPaddle.GetDownKey()))
+                m_leftPaddle.SetPosition(new Vector2(m_leftPaddle.GetPosition().X, m_leftPaddle.GetPosition().Y + m_leftPaddle.GetSpeed()));
 
             // Move right paddle up and down
-            if (Raylib.IsKeyDown(rightPaddle.GetUpKey()))
-                rightPaddle.SetPosition(new Vector2(rightPaddle.GetPosition().X, rightPaddle.GetPosition().Y - rightPaddle.GetSpeed()));
-            if (Raylib.IsKeyDown(rightPaddle.GetDownKey()))
-                rightPaddle.SetPosition(new Vector2(rightPaddle.GetPosition().X, rightPaddle.GetPosition().Y + rightPaddle.GetSpeed()));
+            if (Raylib.IsKeyDown(m_rightPaddle.GetUpKey()))
+                m_rightPaddle.SetPosition(new Vector2(m_rightPaddle.GetPosition().X, m_rightPaddle.GetPosition().Y - m_rightPaddle.GetSpeed()));
+            if (Raylib.IsKeyDown(m_rightPaddle.GetDownKey()))
+                m_rightPaddle.SetPosition(new Vector2(m_rightPaddle.GetPosition().X, m_rightPaddle.GetPosition().Y + m_rightPaddle.GetSpeed()));
         }
 
         void MoveBall()
         {
+            m_ball.SetPosition(m_ball.GetPosition() + m_ball.GetDirection() * m_ball.GetSpeed());
 
+            // ball bounce off left of screen
+            if (m_ball.GetPosition().X - m_ball.GetRadius() < 0)
+            {
+                m_rightPaddle.SetScore(m_rightPaddle.GetScore() + 1);
+                ResetPos();
+            }
+
+            // ball bounce off right of screen
+            if (m_ball.GetPosition().X + m_ball.GetRadius() > m_windowWidth)
+            {
+                m_leftPaddle.SetScore(m_leftPaddle.GetScore() + 1);
+                ResetPos();
+            }
+
+            // ball bounce off top of screen
+            if (m_ball.GetPosition().Y - m_ball.GetRadius() < 0)
+                m_ball.SetDirection(new Vector2(m_ball.GetDirection().X, -m_ball.GetDirection().Y));
+
+            // ball bounce off bottom of screen
+            if (m_ball.GetPosition().Y + m_ball.GetRadius() > m_windowHeight)
+                m_ball.SetDirection(new Vector2(m_ball.GetDirection().X, -m_ball.GetDirection().Y));
+        }
+
+        void BallPaddleCollision(Paddle a_paddle)
+        {
+            float top = a_paddle.GetPosition().Y - (a_paddle.GetSize().Y / 2);
+            float bottom = a_paddle.GetPosition().Y + (a_paddle.GetSize().Y / 2);
+            float left = a_paddle.GetPosition().X - (a_paddle.GetSize().X * 2);
+            float right = a_paddle.GetPosition().X + (a_paddle.GetSize().X * 2);
+
+            if (m_ball.GetPosition().Y > top &&
+                m_ball.GetPosition().Y < bottom &&
+                m_ball.GetPosition().X > left &&
+                m_ball.GetPosition().X < right)
+
+                m_ball.SetDirection(new Vector2(-m_ball.GetDirection().X, m_ball.GetDirection().Y));
+        }
+
+        void ResetPos()
+        {
+            m_ball.SetPosition(new Vector2(m_windowWidth / 2, m_windowHeight / 2));
+            m_leftPaddle.SetPosition(new Vector2(30, m_windowHeight / 2));
+            m_rightPaddle.SetPosition(new Vector2(m_windowWidth - 30, m_windowHeight / 2));
         }
 
         void Draw()
@@ -186,10 +224,20 @@ namespace Pong
             Raylib.BeginDrawing();
             Raylib.ClearBackground(Color.BLACK);
 
-            Raylib.DrawRectangleV(leftPaddle.GetCenter(), leftPaddle.GetSize(), leftPaddle.GetColor());
-            Raylib.DrawRectangleV(rightPaddle.GetCenter(), rightPaddle.GetSize(), rightPaddle.GetColor());
+            Raylib.DrawText(m_leftPaddle.GetScore().ToString(), 30, 30, 40, Color.LIGHTGRAY);
+            Raylib.DrawText(m_rightPaddle.GetScore().ToString(), m_windowWidth - 50, 30, 40, Color.LIGHTGRAY);
 
-            Raylib.DrawCircleV(ball.GetCenter(), ball.GetRadius(), ball.GetColor());
+            Raylib.DrawRectangleV(m_leftPaddle.GetCorner(), m_leftPaddle.GetSize(), m_leftPaddle.GetColor());
+            Raylib.DrawRectangleV(m_rightPaddle.GetCorner(), m_rightPaddle.GetSize(), m_rightPaddle.GetColor());
+
+            Raylib.DrawCircleV(m_ball.GetPosition(), m_ball.GetRadius(), m_ball.GetColor());
+
+            // Debug
+            // Raylib.DrawCircleV(m_rightPaddle.GetCorner(), 5f, Color.YELLOW);
+            // Raylib.DrawCircleV(m_rightPaddle.GetPosition(), 5f, Color.YELLOW);
+            // Raylib.DrawCircleV(m_leftPaddle.GetCorner(), 5f, Color.YELLOW);
+            // Raylib.DrawCircleV(m_leftPaddle.GetPosition(), 5f, Color.YELLOW);
+            // Raylib.DrawCircleV(m_ball.GetPosition(), 5f, Color.YELLOW);
 
             Raylib.EndDrawing();
         }
