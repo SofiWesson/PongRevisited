@@ -244,17 +244,17 @@ namespace Pong
 
             Raylib.DrawCircleV(ball.GetPosition(), ball.GetRadius(), ball.GetColor());
 
-            Raylib.DrawText(leftPaddle.GetScore().ToString(), (int)(.25f * windowSize), (int)(.25f * windowSize), (int)(0.5 * windowSize), Color.LIGHTGRAY);
-            Raylib.DrawText(rightPaddle.GetScore().ToString(), windowWidth - (int)(.58f * windowSize), (int)(.25f * windowSize), (int)(0.5 * windowSize), Color.LIGHTGRAY);
+            Raylib.DrawText(leftPaddle.GetScore().ToString(), (int)(.40f * windowSize), (int)(.25f * windowSize), (int)(0.5 * windowSize), Color.LIGHTGRAY);
+            Raylib.DrawText(rightPaddle.GetScore().ToString(), windowWidth - (int)(.65f * windowSize), (int)(.25f * windowSize), (int)(0.5 * windowSize), Color.LIGHTGRAY);
 
             // Debug
             if (debugEnabled)
             {
-                Raylib.DrawCircleV(rightPaddle.GetCorner(), 0.1f * windowSize, Color.YELLOW);
-                Raylib.DrawCircleV(rightPaddle.GetPosition(), 0.1f * windowSize, Color.YELLOW);
-                Raylib.DrawCircleV(leftPaddle.GetCorner(), 0.1f * windowSize, Color.YELLOW);
-                Raylib.DrawCircleV(leftPaddle.GetPosition(), 0.1f * windowSize, Color.YELLOW);
-                Raylib.DrawCircleV(ball.GetPosition(), 0.1f * windowSize, Color.YELLOW);
+                Raylib.DrawCircleV(rightPaddle.GetCorner(), 0.05f * windowSize, Color.YELLOW);
+                Raylib.DrawCircleV(rightPaddle.GetPosition(), 0.05f * windowSize, Color.YELLOW);
+                Raylib.DrawCircleV(leftPaddle.GetCorner(), 0.05f * windowSize, Color.YELLOW);
+                Raylib.DrawCircleV(leftPaddle.GetPosition(), 0.05f * windowSize, Color.YELLOW);
+                Raylib.DrawCircleV(ball.GetPosition(), 0.05f * windowSize, Color.YELLOW);
             }
 
             Raylib.EndDrawing();
