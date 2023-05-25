@@ -145,7 +145,8 @@ namespace Pong
             if (Raylib.IsKeyPressed(KeyboardKey.KEY_F1))
                 debugEnabled = !debugEnabled;
 
-            MovePaddles();
+            MovePaddle(leftPaddle);
+            MovePaddle(rightPaddle);
             MoveBall();
             // Updates corner positions for both paddles
             UpdateCorners();
@@ -169,31 +170,19 @@ namespace Pong
                 ));
         }
 
-        void MovePaddles()
+        void MovePaddle(Paddle paddle)
         {
-            // Move left paddle up and down
-            if (Raylib.IsKeyDown(leftPaddle.GetUpKey()))
-                leftPaddle.SetPosition(new Vector2(leftPaddle.GetPosition().X, leftPaddle.GetPosition().Y - leftPaddle.GetSpeed()));
-            if (Raylib.IsKeyDown(leftPaddle.GetDownKey()))
-                leftPaddle.SetPosition(new Vector2(leftPaddle.GetPosition().X, leftPaddle.GetPosition().Y + leftPaddle.GetSpeed()));
+            // Move paddle up and down
+            if (Raylib.IsKeyDown(paddle.GetUpKey()))
+                paddle.SetPosition(new Vector2(paddle.GetPosition().X, paddle.GetPosition().Y - paddle.GetSpeed()));
+            if (Raylib.IsKeyDown(paddle.GetDownKey()))
+                paddle.SetPosition(new Vector2(paddle.GetPosition().X, paddle.GetPosition().Y + paddle.GetSpeed()));
 
-            // Keep left paddle on screen
-            if (leftPaddle.GetPosition().Y - (leftPaddle.GetSize().Y / 2) < 0)
-                leftPaddle.SetPosition(new Vector2(leftPaddle.GetPosition().X, leftPaddle.GetPosition().Y + leftPaddle.GetSpeed()));
-            if (leftPaddle.GetPosition().Y + (leftPaddle.GetSize().Y / 2) > windowHeight)
-                leftPaddle.SetPosition(new Vector2(leftPaddle.GetPosition().X, leftPaddle.GetPosition().Y - leftPaddle.GetSpeed()));
-
-            // Move right paddle up and down
-            if (Raylib.IsKeyDown(rightPaddle.GetUpKey()))
-                rightPaddle.SetPosition(new Vector2(rightPaddle.GetPosition().X, rightPaddle.GetPosition().Y - rightPaddle.GetSpeed()));
-            if (Raylib.IsKeyDown(rightPaddle.GetDownKey()))
-                rightPaddle.SetPosition(new Vector2(rightPaddle.GetPosition().X, rightPaddle.GetPosition().Y + rightPaddle.GetSpeed()));
-
-            // Keep right paddle on screen
-            if (rightPaddle.GetPosition().Y - (rightPaddle.GetSize().Y / 2) < 0)
-                rightPaddle.SetPosition(new Vector2(rightPaddle.GetPosition().X, rightPaddle.GetPosition().Y + rightPaddle.GetSpeed()));
-            if (rightPaddle.GetPosition().Y + (rightPaddle.GetSize().Y / 2) > windowHeight)
-                rightPaddle.SetPosition(new Vector2(rightPaddle.GetPosition().X, rightPaddle.GetPosition().Y - rightPaddle.GetSpeed()));
+            // Keep paddle on screen
+            if (paddle.GetPosition().Y - (paddle.GetSize().Y / 2) < 0)
+                paddle.SetPosition(new Vector2(paddle.GetPosition().X, paddle.GetPosition().Y + paddle.GetSpeed()));
+            if (paddle.GetPosition().Y + (paddle.GetSize().Y / 2) > windowHeight)
+                paddle.SetPosition(new Vector2(paddle.GetPosition().X, paddle.GetPosition().Y - paddle.GetSpeed()));
         }
 
         void MoveBall()
