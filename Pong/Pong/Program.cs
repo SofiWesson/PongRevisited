@@ -1,9 +1,177 @@
 ﻿using Raylib_cs;
 using System;
 using System.Numerics;
+using System.Linq;
 
 namespace Pong
 {
+    class Application
+    {
+        GameStateManager gameStateManager = null;
+
+        Vector2 aspectRatio = new Vector2(16, 9);
+
+        static int windowSize = 120;
+        static string windowName = "Pong";
+
+        int windowWidth;
+        int windowHeight;
+
+        public void Run()
+        {
+            windowWidth = windowSize * (int)aspectRatio.X;
+            windowHeight = windowSize * (int)(aspectRatio.Y);
+
+            Raylib.InitWindow(windowWidth, windowHeight, windowName);
+            Raylib.SetTargetFPS(60);
+
+            Load();
+
+            while (!Raylib.WindowShouldClose())
+            {
+                Update();
+                Draw();
+            }
+
+            Raylib.WindowShouldClose();
+        }
+
+        void Load()
+        {
+            gameStateManager = new GameStateManager();
+            gameStateManager.SetState("Menu", new MenuState(this));
+
+            gameStateManager.PushState("Menu");
+        }
+
+        void Unload()
+        {
+
+        }
+
+        void Update()
+        {
+            gameStateManager.Update();
+        }
+
+        void Draw()
+        {
+            Raylib.BeginDrawing();
+            Raylib.ClearBackground(Color.RAYWHITE);
+
+            gameStateManager.Draw();
+
+            Raylib.EndDrawing();
+        }
+
+        GameStateManager GetGameStateManager()
+        {
+            return gameStateManager;
+        }
+    }
+
+    class GameStateManager
+    {
+        protected IDictionary<string, IGameState> states = new Dictionary<string, IGameState>();
+        protected List<IGameState> stack = new List<IGameState>();
+        protected List<Action> commands = new List<Action>();
+
+        public void Unload()
+        {
+            
+        }
+
+        public void Update()
+        {
+            for (int i = 0; i < commands.Count; i++)
+                commands[i].Invoke();
+            commands.Clear();
+
+            stack.Last().Update();
+        }
+
+        public void Draw()
+        {
+            for (int i = 0; i < stack.Count; i++)
+            {
+                stack[i].Draw();
+            }
+        }
+
+        public void SetState(string name, IGameState state)
+        {
+            commands.Insert(commands.Count, () =>
+            {
+            if (states.Count != 0 && states[name] != null)
+                {
+                    states[name].Unload();
+                }
+
+                states[name] = state;
+
+                if (states[name] != null)
+                {
+                    states[name].Load();
+                }
+            });
+        }
+
+        public void PushState(string name)
+        {
+            commands.Insert(commands.Count, () =>
+            {
+                stack.Insert(stack.Count, states[name]);
+            });
+        }
+
+        public void PopState()
+        {
+            commands.Insert(commands.Count, () =>
+            {
+                stack.RemoveAt(stack.Count - 1);
+            });
+        }
+    }
+
+    class IGameState
+    {
+        virtual public void Load() { }
+        virtual public void Unload() { }
+        virtual public void Update() { }
+        virtual public void Draw() { }
+    }
+
+    class MenuState : IGameState
+    {
+        Application app;
+
+        public MenuState(Application app)
+        {
+            this.app = app;
+        }
+
+        override public void Load()
+        {
+
+        }
+
+        override public void Unload()
+        {
+            
+        }
+
+        public override void Update()
+        {
+            
+        }
+
+        public override void Draw()
+        {
+            Raylib.ClearBackground(Color.BLACK);
+            Raylib.DrawText("Menu", 10, 10, 20, Color.LIGHTGRAY);
+        }
+    }
+
     class Ball
     {
         Vector2 position;
@@ -80,28 +248,31 @@ namespace Pong
 
         static void Main(string[] args)
         {
-            Program p = new Program();
+            Application app = new Application();
+            app.Run();
 
-            p.RunProgram();
+            //Program p = new Program();
+
+            //p.RunProgram();
         }
 
         void RunProgram()
         {
-            windowWidth = windowSize * (int)aspectRatio.X;
-            windowHeight = windowSize * (int)(aspectRatio.Y);
+            //windowWidth = windowSize * (int)aspectRatio.X;
+            //windowHeight = windowSize * (int)(aspectRatio.Y);
 
-            Raylib.InitWindow(windowWidth, windowHeight, windowName);
-            Raylib.SetTargetFPS(60);
+            //Raylib.InitWindow(windowWidth, windowHeight, windowName);
+            //Raylib.SetTargetFPS(60);
 
-            LoadGame();
+            //LoadGame();
 
-            while (!Raylib.WindowShouldClose())
-            {
-                Update();
-                Draw();
-            }
+            //while (!Raylib.WindowShouldClose())
+            //{
+            //    Update();
+            //    Draw();
+            //}
 
-            Raylib.WindowShouldClose();
+            //Raylib.WindowShouldClose();
         }
 
         void LoadGame()
