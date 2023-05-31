@@ -17,6 +17,21 @@ namespace Pong
         int windowWidth;
         int windowHeight;
 
+        public int GetWindowSize()
+        {
+            return windowSize;
+        }
+
+        public int GetWindowWidth()
+        {
+            return windowWidth;
+        }
+
+        public int GetWindowHeight()
+        {
+            return windowHeight;
+        }
+
         public void Run()
         {
             windowWidth = windowSize * (int)aspectRatio.X;
@@ -40,6 +55,7 @@ namespace Pong
         {
             gameStateManager = new GameStateManager();
             gameStateManager.SetState("Menu", new MenuState(this));
+            gameStateManager.SetState("Game", new GameState(this));
 
             gameStateManager.PushState("Menu");
         }
@@ -64,7 +80,7 @@ namespace Pong
             Raylib.EndDrawing();
         }
 
-        GameStateManager GetGameStateManager()
+        public GameStateManager GetGameStateManager()
         {
             return gameStateManager;
         }
@@ -102,14 +118,14 @@ namespace Pong
         {
             commands.Insert(commands.Count, () =>
             {
-            if (states.Count != 0 && states[name] != null)
+                if (states.ContainsKey(name))
                 {
                     states[name].Unload();
                 }
 
                 states[name] = state;
 
-                if (states[name] != null)
+                if (states.ContainsKey(name))
                 {
                     states[name].Load();
                 }
@@ -120,7 +136,9 @@ namespace Pong
         {
             commands.Insert(commands.Count, () =>
             {
+                states[name].Unload();
                 stack.Insert(stack.Count, states[name]);
+                states[name].Load();
             });
         }
 
@@ -162,13 +180,20 @@ namespace Pong
 
         public override void Update()
         {
-            
+            if (Raylib.IsKeyPressed(KeyboardKey.KEY_ONE))
+            {
+                app.GetGameStateManager().PopState();
+                app.GetGameStateManager().PushState("Game");
+            }
         }
 
         public override void Draw()
         {
+            float windowSize = app.GetWindowSize();
+
             Raylib.ClearBackground(Color.BLACK);
-            Raylib.DrawText("Menu", 10, 10, 20, Color.LIGHTGRAY);
+            Raylib.DrawText("Pong", (int)(0.2f * windowSize), (int)(0.2f * windowSize), (int)(1.4f * windowSize), Color.LIGHTGRAY);
+            Raylib.DrawText("Play", (int)(0.2f * windowSize), (int)(2.8f * windowSize), (int)(1f * windowSize), Color.LIGHTGRAY);
         }
     }
 
@@ -225,6 +250,194 @@ namespace Pong
         public float GetSpeed() { return speed; }
         public int GetScore() { return score;}
         public Vector2 GetCorner() { return corner; }
+    }
+
+    class GameState : IGameState
+    {
+        Application app;
+
+        Ball ball = new Ball();
+        Paddle leftPaddle = new Paddle();
+        Paddle rightPaddle = new Paddle();
+
+        bool debugEnabled = false;
+
+        int windowSize;
+        int windowWidth;
+        int windowHeight;
+
+        public GameState(Application app)
+        {
+            this.app = app;
+        }
+
+        override public void Load()
+        {
+            windowSize = app.GetWindowSize();
+            windowWidth = app.GetWindowWidth();
+            windowHeight = app.GetWindowHeight();
+
+            // Set ball values
+            ball.SetDirection(new Vector2(0.707f, 0.707f));
+            ball.SetRadius(0.29f * windowSize);
+            ball.SetSpeed(0.07f * windowSize);
+            ball.SetColor(Color.WHITE);
+
+            // Set left paddle values
+            leftPaddle.SetSize(new Vector2(.23f * windowSize, 2.5f * windowSize));
+            leftPaddle.SetColor(Color.BLUE);
+            leftPaddle.SetUpKey(KeyboardKey.KEY_W);
+            leftPaddle.SetDownKey(KeyboardKey.KEY_S);
+            leftPaddle.SetSpeed(.07f * windowSize);
+            leftPaddle.SetScore(0);
+
+            // Set right paddle values
+            rightPaddle.SetSize(new Vector2(.23f * windowSize, 2.5f * windowSize));
+            rightPaddle.SetColor(Color.RED);
+            rightPaddle.SetUpKey(KeyboardKey.KEY_UP);
+            rightPaddle.SetDownKey(KeyboardKey.KEY_DOWN);
+            rightPaddle.SetSpeed(.07f * windowSize);
+            rightPaddle.SetScore(0);
+
+            // set initial position
+            ResetPos();
+        }
+
+        override public void Unload()
+        {
+
+        }
+
+        public override void Update()
+        {
+            if (Raylib.IsKeyPressed(KeyboardKey.KEY_F11))
+            {
+                if (Raylib.IsWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE))
+                    Raylib.ClearWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+                else
+                    Raylib.SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+            }
+
+            if (Raylib.IsKeyPressed(KeyboardKey.KEY_F1))
+                debugEnabled = !debugEnabled;
+
+            if (Raylib.IsKeyPressed(KeyboardKey.KEY_ESCAPE))
+            {
+                app.GetGameStateManager().PopState();
+                app.GetGameStateManager().PushState("Menu");
+            }
+
+            MovePaddle(leftPaddle);
+            MovePaddle(rightPaddle);
+            MoveBall();
+            // Updates corner positions for both paddles
+            UpdateCorners();
+
+            BallPaddleCollision(leftPaddle);
+            BallPaddleCollision(rightPaddle);
+        }
+
+        void UpdateCorners()
+        {
+            leftPaddle.SetCorner(
+                new Vector2(
+                    leftPaddle.GetPosition().X - (leftPaddle.GetSize().X / 2),
+                    leftPaddle.GetPosition().Y - (leftPaddle.GetSize().Y / 2)
+                ));
+
+            rightPaddle.SetCorner(
+                new Vector2(
+                    rightPaddle.GetPosition().X - (rightPaddle.GetSize().X / 2),
+                    rightPaddle.GetPosition().Y - (rightPaddle.GetSize().Y / 2)
+                ));
+        }
+
+        void MovePaddle(Paddle paddle)
+        {
+            // Move paddle up and down
+            if (Raylib.IsKeyDown(paddle.GetUpKey()))
+                paddle.SetPosition(new Vector2(paddle.GetPosition().X, paddle.GetPosition().Y - paddle.GetSpeed()));
+            if (Raylib.IsKeyDown(paddle.GetDownKey()))
+                paddle.SetPosition(new Vector2(paddle.GetPosition().X, paddle.GetPosition().Y + paddle.GetSpeed()));
+
+            // Keep paddle on screen
+            if (paddle.GetPosition().Y - (paddle.GetSize().Y / 2) < 0)
+                paddle.SetPosition(new Vector2(paddle.GetPosition().X, paddle.GetPosition().Y + paddle.GetSpeed()));
+            if (paddle.GetPosition().Y + (paddle.GetSize().Y / 2) > windowHeight)
+                paddle.SetPosition(new Vector2(paddle.GetPosition().X, paddle.GetPosition().Y - paddle.GetSpeed()));
+        }
+
+        void MoveBall()
+        {
+            ball.SetPosition(ball.GetPosition() + ball.GetDirection() * ball.GetSpeed());
+
+            // ball bounce off left of screen
+            if (ball.GetPosition().X - ball.GetRadius() < 0)
+            {
+                rightPaddle.SetScore(rightPaddle.GetScore() + 1);
+                ResetPos();
+            }
+
+            // ball bounce off right of screen
+            if (ball.GetPosition().X + ball.GetRadius() > windowWidth)
+            {
+                leftPaddle.SetScore(leftPaddle.GetScore() + 1);
+                ResetPos();
+            }
+
+            // ball bounce off top of screen
+            if (ball.GetPosition().Y - ball.GetRadius() < 0)
+                ball.SetDirection(new Vector2(ball.GetDirection().X, -ball.GetDirection().Y));
+
+            // ball bounce off bottom of screen
+            if (ball.GetPosition().Y + ball.GetRadius() > windowHeight)
+                ball.SetDirection(new Vector2(ball.GetDirection().X, -ball.GetDirection().Y));
+        }
+
+        void BallPaddleCollision(Paddle a_paddle)
+        {
+            float top = a_paddle.GetPosition().Y - (a_paddle.GetSize().Y / 2);
+            float bottom = a_paddle.GetPosition().Y + (a_paddle.GetSize().Y / 2);
+            float left = a_paddle.GetPosition().X - (a_paddle.GetSize().X * 2);
+            float right = a_paddle.GetPosition().X + (a_paddle.GetSize().X * 2);
+
+            if (ball.GetPosition().Y > top &&
+                ball.GetPosition().Y < bottom &&
+                ball.GetPosition().X > left &&
+                ball.GetPosition().X < right)
+
+                ball.SetDirection(new Vector2(-ball.GetDirection().X, ball.GetDirection().Y));
+        }
+
+        void ResetPos()
+        {
+            ball.SetPosition(new Vector2(windowWidth / 2, windowHeight / 2));
+            leftPaddle.SetPosition(new Vector2(.23f * windowSize, windowHeight / 2));
+            rightPaddle.SetPosition(new Vector2(windowWidth - (.23f * windowSize), windowHeight / 2));
+        }
+
+        public override void Draw()
+        {
+            Raylib.ClearBackground(Color.BLACK);
+
+            Raylib.DrawRectangleV(leftPaddle.GetCorner(), leftPaddle.GetSize(), leftPaddle.GetColor());
+            Raylib.DrawRectangleV(rightPaddle.GetCorner(), rightPaddle.GetSize(), rightPaddle.GetColor());
+
+            Raylib.DrawCircleV(ball.GetPosition(), ball.GetRadius(), ball.GetColor());
+
+            Raylib.DrawText(leftPaddle.GetScore().ToString(), (int)(.40f * windowSize), (int)(.25f * windowSize), (int)(0.5 * windowSize), Color.LIGHTGRAY);
+            Raylib.DrawText(rightPaddle.GetScore().ToString(), windowWidth - (int)(.65f * windowSize), (int)(.25f * windowSize), (int)(0.5 * windowSize), Color.LIGHTGRAY);
+
+            // Debug
+            if (debugEnabled)
+            {
+                Raylib.DrawCircleV(rightPaddle.GetCorner(), 0.05f * windowSize, Color.YELLOW);
+                Raylib.DrawCircleV(rightPaddle.GetPosition(), 0.05f * windowSize, Color.YELLOW);
+                Raylib.DrawCircleV(leftPaddle.GetCorner(), 0.05f * windowSize, Color.YELLOW);
+                Raylib.DrawCircleV(leftPaddle.GetPosition(), 0.05f * windowSize, Color.YELLOW);
+                Raylib.DrawCircleV(ball.GetPosition(), 0.05f * windowSize, Color.YELLOW);
+            }
+        }
     }
 
     class Program
